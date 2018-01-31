@@ -1,55 +1,218 @@
 body {
-    min-height: 2000px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #222;
+  background-color: #f2f5f6;
+}
+
+* {
+  box-sizing: border-box;
+  line-height: 140%;
+}
+
+a {
+  font-weight: 500;
+  color: #222;
+  text-decoration: none;
+  border-bottom: 2px solid #0f0;
+}
+
+a:hover,
+a:focus {
+  border-color: transparent;
+  color: #0f0;
+  background-color: #002d47;
+}
+
+ul,
+ol {
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-left: 15px;
+  list-style-type: none;
+}
+
+/* Initiate grid on desktop aspect ratios */
+@media (min-aspect-ratio: 1/1) {
+  body,
+  #itemList {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-column-gap: 2vmin;
+    grid-row-gap: 3vmin;
+  }
+
+  /* sub grid */
+  #itemList {
+    grid-column-end: span 4;
+  }
 }
 
 .navbar-static-top {
-    margin-bottom: 19px;
+  margin-bottom: 19px;
 }
 
+.video-grid-wrapper {
+  grid-column-end: span 3;
+}
 .video-container {
-    position: relative;
-    height: 0;
-    padding-bottom: 56.25%;
-}
-
-.video-container video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-#sbideo-main {
-    margin: auto;
-}
-
-.label {
-    cursor: pointer;
-}
-
-.activeVideo {
-    font-weight: bold;
+  position: relative;
+  height: 0;
+  padding-bottom: 56.25%;
 }
 
 #activeVideoMeta {
-    padding: 30px;
+  grid-column-end: span 1;
 }
 
-.searchBar {
-    padding-top: 30px;
+.video-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
-#searchField {
-    width: 50%;
-    text-align: center;
-    margin: auto;
+.videoparent:first-of-type {
+  grid-column-start: 1; /* make sure the video list starts on the left*/
 }
 
 #itemList {
-    padding: 0 30px;
+  padding-left: 0;
 }
 
-.breakWords {
-    word-wrap: break-word;
+#itemList > .videoparent > .videoparent-title {
+  font-size: 1.4rem;
+}
+
+.videoparent-title {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+.searchBar {
+  grid-column-start: 2;
+  grid-column-end: 4;
+  text-align: center;
+}
+
+#searchField {
+  width: 100%;
+  height: 3rem;
+  text-align: center;
+  margin: auto;
+  font-size: 1rem;
+}
+
+#sbideo-main {
+  margin: auto;
+}
+
+.videolink {
+  line-height: 1.2rem;
+  font-size: 0.9rem;
+  padding: 0.02rem 0.125rem;
+}
+
+.videolink[videoactive] {
+  font-weight: bold;
+}
+
+.icon {
+  margin-bottom: -2px;
+}
+
+.meta {
+  display: none;
+}
+
+.meta .people {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.meta .tags {
+  margin-bottom: 10px;
+}
+
+.meta .tag {
+  background-color: #002d47;
+  font-weight: 600;
+  color: #0f0;
+  border: 0;
+  display: inline-block;
+  padding: 2px 4px;
+  line-height: 0.8rem;
+  text-transform: uppercase;
+  margin-right: 3px;
+  margin-bottom: 3px;
+  font-size: 0.7rem;
+  text-decoration: none;
+}
+
+.meta .tag:hover {
+  background-color: #0f0;
+  color: #002d47;
+}
+
+.meta .description {
+  font-size: 0.9rem;
+}
+
+#activeVideoMeta .meta,
+.tooltip .meta {
+  display: block;
+}
+
+/*
+Tooltip styles
+*/
+.tooltip {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  width: 30vmin;
+  height: auto;
+  background-color: #fff;
+}
+
+.tooltip[x-placement^='right'] {
+  margin-left: 11px;
+}
+
+.tooltip-arrow {
+  border-color: #fff;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  position: absolute;
+  margin: 5px;
+}
+
+.tooltip[x-placement^='right'] .tooltip-arrow {
+  border-width: 10px 10px 10px 0;
+  border-left-color: transparent;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  left: -10px;
+  top: calc(50% - 10px);
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.tooltip[x-placement^='left'] {
+  margin-right: 10px;
+}
+.tooltip[x-placement^='left'] .tooltip-arrow {
+  border-width: 10px 0 10px 10px;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  right: -10px;
+  top: calc(50% - 10px);
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.tooltip-inner {
+  padding: 15px;
+  height: auto;
 }

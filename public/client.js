@@ -1,111 +1,307 @@
-$(function () {
-    var $itemList = $('#itemList');
+(() => {
+  /**
+   * Global variables
+   */
+  const itemsEndpoint = '/items.json';
 
-    // load items and generate list
-    $.getJSON('/items.json', function (items) {
-        var walkItems = function (items) {
-            var html = '';
-            items.forEach(function (item) {
-                if (item.type === 'folder') {
-                    html += '<li>';
-                    html += item.meta.title;
-                    if (item.items && item.items.length > 0) {
-                        html += '<ul>';
-                        html += walkItems(item.items);
-                        html += '</ul>';
-                    }
-                } else if (item.type === 'video') {
-                    html += '<li class="jsearch-row">';
-                    html += '<a class="jsearch-field videolink" href="" data-video="'
-                        + item.src + '">'
-                        + item.meta.title + '</a>';
-                    html += '<div class="meta hidden">';
-                    item.meta.people.forEach(function (person) {
-                        html += '<span class="jsearch-field"><span class="glyphicon glyphicon-user" aria-hidden="true"></span>&nbsp;' + person + '&nbsp;</span>';
-                    });
-                    html += '<div class="breakWords">';
-                    item.meta.tags.forEach(function (tag) {
-                        html += '<span class="tag label label-primary jsearch-field">' + tag + '</span>&nbsp;';
-                    });
-                    html += '</div>';
-                    html += '<div class="description jsearch-field">' + item.meta.description + '</div>';
-                    html += '</div>';
-                }
+  /**
+   * Initialize
+   */
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('itemList');
 
-                html += '</li>';
-            });
+    const renderPromise = renderHtml(el);
 
-            return html;
+    const searchPromise = initSearch(renderPromise);
+
+    initVideoLinks(renderPromise, el);
+
+    initRouting(searchPromise);
+  });
+
+  /**
+   * Fill value in search field and trigger search
+   * @param {string} search string
+   */
+  const triggerSearch = str => {
+    const searchInput = document.getElementById('searchField');
+    searchInput.value = str;
+
+    // trigger input event to fire search
+    const event = new Event('input');
+    searchInput.dispatchEvent(event);
+    searchInput.focus();
+  };
+
+  /**
+   * Routing for videos and search
+   * @param {Promise} searchPromise to provide state after search initized
+   */
+  const initRouting = searchPromise => {
+    const loadVideoFromHash = () => {
+      const str = decodeURIComponent(location.hash.replace('#', ''));
+      const videoEl = document.getElementById(str);
+
+      if (videoEl) {
+        // video element exists, empty search and load it
+        triggerSearch('');
+        const videolink = videoEl.getElementsByClassName('videolink')[0];
+        loadAndPlayVideo(videolink);
+      } else {
+        // video not available, search the term instead
+        triggerSearch(str);
+      }
+    };
+
+    searchPromise.then(() => {
+      // Load initial video if hash exist
+      loadVideoFromHash();
+
+      // Load video on hash change
+      window.addEventListener('hashchange', loadVideoFromHash);
+    });
+  };
+
+  /**
+   * Init Search
+   *
+   * @param {Promise} renderPromise provides the search data
+   * @return {Promise} get a Promise back to know when search is initialized
+   */
+  const initSearch = renderPromise => {
+    return renderPromise
+      .then(searchIndex => {
+        // setup search
+        const searchOptions = {
+          keys: ['title', 'description', 'tags', 'people'],
+          threshold: 0.2,
+          tokenize: true,
+          id: 'slug'
         };
+        return new Fuse(searchIndex, searchOptions);
+      })
+      .then(fuse => {
+        const input = document.getElementById('searchField');
+        input.focus();
 
-        var list = '';
-        items.forEach(function (category) {
-            list += '<div class="col-sm-3 col-md-3"><h3>' + category.meta.title + '</h3><ul>';
-            list += walkItems(category.items);
-            list += '</ul></div>';
-        });
+        // on search input trigger search
+        input.addEventListener('input', event => {
+          const searchResults = fuse.search(input.value);
+          const videoList = document.getElementsByClassName('video');
 
-        $itemList.append(list);
+          // show/hide everything
+          for (const videoEl of videoList) {
+            videoEl.style.display = input.value ? 'none' : '';
+            // hide all parents as well and show again later
+            //  // TODO: fix lower levels
+            videoEl.closest('.videoparent').style.display = input.value
+              ? 'none'
+              : '';
+          }
 
-        // init popovers
-        $itemList.find('a').popover({
-            container: 'body',
-            trigger: 'manual',
-            html: true,
-            title: function () {
-                return $(this).text();
-            },
-            content: function () {
-                return $(this).siblings('div.meta').html();
+          searchResults.map(id => {
+            const videoItem = document.getElementById(id);
+            if (videoItem) {
+              videoItem.style.display = '';
+              // traverse dom tree up and show everything
+              let element = videoItem;
+              while (element.parentNode && element.id !== 'itemList') {
+                element.style.display = '';
+                element = element.parentNode;
+              }
             }
-        }).on('mouseenter', function () {
-            var $this = $(this);
-            $this.popover('show');
-            $('.popover').on('mouseleave', function () {
-                $this.popover('hide');
-            });
-        }).on('mouseleave', function () {
-            var $this = $(this);
-            setTimeout(function () {
-                if (!$('.popover:hover').length) {
-                    $this.popover('hide');
-                }
-            }, 100);
+          });
         });
+      })
+      .catch(e => console.log(e));
+  };
+
+  /**
+   * Loads and plays the video
+   * @param {domElement} videolink is the a href link to the video
+   */
+  const loadAndPlayVideo = videoLink => {
+    const src = videoLink.getAttribute('data-video');
+    const videoEl = document.getElementById('sbideo-main');
+    videoEl.setAttribute('src', src);
+    videoEl.play();
+
+    // highlight active video
+    const activeVideos = document.querySelectorAll('[videoactive]');
+    if (activeVideos) {
+      for (const videoEl of activeVideos) {
+        videoEl.removeAttribute('videoactive');
+      }
+    }
+    videoLink.setAttribute('videoactive', 'active');
+
+    // show metadata
+    const video = videoLink.closest('.video');
+    const meta = video.getElementsByClassName('meta')[0];
+    const activeVideoMeta = document.getElementById('activeVideoMeta');
+    video.tooltipInstance.hide();
+    activeVideoMeta.innerHTML = '';
+    activeVideoMeta.insertAdjacentHTML(
+      'beforeEnd',
+      `<h2>${videoLink.innerText}</h2>`
+    );
+    activeVideoMeta.insertAdjacentHTML('beforeEnd', meta.outerHTML);
+
+    window.scroll({ top: 0, left: 0, behavior: 'smooth' });
+  };
+
+  const initVideoLinks = (renderPromise, el) => {
+    // add clickhandlers to video links
+    el.addEventListener('click', event => {
+      const isVideoLink =
+        event.srcElement && event.srcElement.classList.contains('videolink');
+
+      if (isVideoLink) {
+        event.preventDefault(); // prevent jumping to target
+        location.hash = event.srcElement.getAttribute('href');
+      }
     });
 
+    // initialize tooltips when html is rendered
+    renderPromise.then(() => {
+      const videoList = document.getElementsByClassName('video');
+      for (const videoEl of videoList) {
+        const videoLink = videoEl.getElementsByClassName('videolink')[0];
+        const meta = videoEl.getElementsByClassName('meta')[0];
+        const tooltipOptions = {
+          html: true,
+          placement: 'right',
+          title: meta,
+          trigger: 'manual'
+        };
+        const tooltip = new Tooltip(videoLink, tooltipOptions);
+        videoEl.tooltipInstance = tooltip; // save it to dom element for later use
 
-    // event listener for playing videos
-    $itemList.on('click', '.videolink', function (event) {
-        event.preventDefault();
-        
-        var src = event.target.getAttribute('data-video');
-        var videoEl = document.getElementById('sbideo-main');
-        videoEl.setAttribute('src', src);
-        videoEl.play();
-
-        var $videoLink = $(event.target);
-
-        // highlight active video
-        $('.activeVideo').removeClass('activeVideo');
-        $videoLink.addClass('activeVideo');
-
-        // show metadata
-        var $meta = $videoLink.siblings('.meta').first().clone().removeClass('hidden');
-        $('#activeVideoMeta').empty();
-        $('#activeVideoMeta').append('<h2>' + $videoLink.text() + '</h2>');
-        $('#activeVideoMeta').append($meta);
-        
-        window.scroll({ top: 0, left: 0, behavior: 'smooth' });
+        // Manually open and close tooltip
+        videoEl.addEventListener('mouseenter', event => {
+          videoEl.tooltipInstance.show();
+          meta.addEventListener('mouseleave', event =>
+            videoEl.tooltipInstance.hide()
+          );
+        });
+        videoEl.addEventListener('mouseleave', event => {
+          if (!document.querySelector('.tooltip:hover')) {
+            videoEl.tooltipInstance.hide();
+          }
+        });
+      }
     });
+  };
 
-    // event listener for clicking on tags to filter videos
-    $('body').on('click', '.tag', function (event) {
-        var tag = event.target.innerText;
-        $('#searchField').val(tag).keyup();
-    });
+  /**
+   * Helper to create slug from string
+   * @param {string} text to be slugified
+   */
+  const slugify = text =>
+    text
+      .toString()
+      .toLowerCase()
+      .replace(/(data|video|mp4)/g, '')
+      .replace(/\//g, '-') // replace video stuff
+      .replace(/\s+/g, '-') // Replace spaces with -
+      .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+      .replace(/\-\-+/g, '-') // Replace multiple - with single -
+      .replace(/^-+/, '') // Trim - from start of text
+      .replace(/-+$/, ''); // Trim - from end of text
 
-    // init jsearch
-    $('#searchField').jsearch({minLength: 2}).focus();
+  /**
+   * Fetch data and render Html
+   * @param {domElement} the dom element where the html gets inserted into
+   * @return {Promise} returns a promise which provides the searchIndex data
+   */
+  const renderHtml = el => {
+    const searchIndex = [];
 
-});
+    /**
+     * Decides which type of renderer should be called
+     * @param {object|array} item to render
+     */
+    const renderItems = item => {
+      return item.type === 'video' ? renderVideo(item) : renderFolder(item);
+    };
+
+    /**
+     * Recursivley render folder snippets
+     * @param {object|array} folder
+     */
+    const renderFolder = folder => {
+      if (Array.isArray(folder)) {
+        return folder.map(singleFolder => renderItems(singleFolder)).join('');
+      }
+
+      const childrenExist = folder.items && folder.items.length > 0;
+      const children = childrenExist
+        ? `<ul>${renderItems(folder.items)}</ul>`
+        : '';
+
+      return `<li class="videoparent">
+          <span class="videoparent-title">${
+            folder.meta ? folder.meta.title : ''
+          }</span>
+          ${children}
+        </li>`;
+    };
+
+    /**
+     * Renders a single video information snippet
+     * @param {object} item of type video
+     */
+    const renderVideo = item => {
+      // make it searchable
+      item.meta.slug = slugify(item.src);
+      searchIndex.push(item.meta);
+
+      const rTags = item.meta.tags
+        .map(
+          tag => `<a href="#${encodeURIComponent(tag)}" class="tag">${tag}</a>`
+        )
+        .join(' ');
+
+      return `<li id="${item.meta.slug}" class="video">
+        <a href="#${encodeURIComponent(
+          item.meta.slug
+        )}" class=" videolink" data-video="${item.src}">
+          ${item.meta.title}
+        </a>
+
+        <div class="meta">
+          <div class="people">
+            <img class="icon" src="/octicons/build/svg/person.svg" alt="person" role="presentation"/>
+            ${item.meta.people.join(', ')}
+          </div>
+          <div class="tags">
+            ${rTags}
+          </div>
+        <div>
+
+        <div class="description ">
+          ${item.meta.description}
+        </div>
+      </li>`;
+    };
+
+    /**
+     * Fetches data and initiates html rendering
+     */
+    return fetch(itemsEndpoint)
+      .then(response => {
+        if (!response.ok) {
+          throw Error(response.statusText);
+        }
+        return response.json();
+      })
+      .then(json => {
+        // initialze html rendering here
+        const output = json.map(item => renderItems(item)).join('');
+
+        el.insertAdjacentHTML('beforeEnd', output);
+
+        return searchIndex;
+      });
+  };
+})();

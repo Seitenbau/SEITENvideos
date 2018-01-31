@@ -29,9 +29,11 @@ app.get('/', function (req, res) {
 // serve video folder
 app.use('/data', express.static(dataFolder));
 // serve third-party files
-app.use('/bootstrap', express.static(__dirname + '/node_modules/bootstrap/dist'));
-app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist'));
 app.use('/smoothscroll-polyfill', express.static(__dirname + '/node_modules/smoothscroll-polyfill/dist'));
+app.use('/fuse', express.static(__dirname + '/node_modules/fuse.js/dist'));
+app.use('/popper', express.static(__dirname + '/node_modules/popper.js/dist'));
+app.use('/tooltip', express.static(__dirname + '/node_modules/tooltip.js/dist'));
+app.use('/octicons', express.static(__dirname + '/node_modules/octicons'));
 
 // serve items.json
 app.use('/items.json', (req, res) => {
@@ -85,7 +87,7 @@ var addItemRecursive = function (items, category, meta) {
         subCategory.shift();
         addItemRecursive(item.items, subCategory, meta);
     }
-    
+
     // sort items by title
     items.sort(function(a, b) {
       var titleA = a.meta.title.toUpperCase();
@@ -153,7 +155,7 @@ var reindexItems = function() {
     allItems = [];
     walkSync(dataFolder);
     console.log('reindexed files...');
-    
+
     //TODO throttle reindex
 };
 
@@ -174,7 +176,7 @@ chokidar.watch(dataFolder, {
     }
 }).on('add', function (filePath) {
     if (path.basename(filePath) !== 'meta.json') return;
-    
+
     var relativeFilePath = path.relative(dataFolder, filePath);
     console.log('new file: ' + relativeFilePath);
 
@@ -182,14 +184,14 @@ chokidar.watch(dataFolder, {
 }).on('unlink', function (filePath) {
     var relativeFilePath = path.relative(dataFolder, filePath);
     console.log('removed file: ' + relativeFilePath);
-    
+
     reindexItems();
 }).on('change', function (filePath) {
     if (path.basename(filePath) !== 'meta.json') return;
-    
+
     var relativeFilePath = path.relative(dataFolder, filePath);
     console.log('changed file: ' + relativeFilePath);
-    
+
     reindexItems();
 });
 
