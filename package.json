@@ -1,10 +1,10 @@
 {
   "name": "sbideo",
   "version": "1.0.0",
-  "description": "",
+  "description": "A very simplistic video archive including video transcoding",
   "main": "server.js",
-  "author": "",
-  "license": "",
+  "author": "SEITENBAU",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git://github.com/Seitenbau/SBideo"
