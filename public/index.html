@@ -4,39 +4,32 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SBideo</title>
-    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
 </head>
 <body>
 
-<div class="contaidner">
-    <div class="row">
-        <div class="col-md-7">
-            <div class="video-container">
-                <video id="sbideo-main" controls poster="FuBK_testcard_vectorized.svg"></video>
-            </div>
-        </div>
-        <div class="col-md-5">
-            <div id="activeVideoMeta">
-                <h1>Welcome to SBideo!</h1>
-                <p>Just search and select a video below.</p>
-            </div>
-        </div>
+  <div class="video-grid-wrapper">
+    <div class="video-container">
+      <video id="sbideo-main" controls poster="FuBK_testcard_vectorized.svg"></video>
     </div>
-    <div class="row searchBar">
-        <form class="" role="search">
-            <div class="form-group">
-                <input type="text" class="form-control input-lg" placeholder="Search" id="searchField">
-            </div>
-        </form>
-    </div>
-    <div class="row" id="itemList"></div>
-</div>
+  </div>
 
-<script src="jquery/jquery.min.js"></script>
-<script src="bootstrap/js/bootstrap.min.js"></script>
-<script src="jquery.search.min.js"></script>
-<script src="smoothscroll-polyfill/smoothscroll-polyfill.min.js"></script>
+  <div id="activeVideoMeta">
+    <h1>Welcome to SBideo!</h1>
+    <p>Just search and select a video below.</p>
+  </div>
+
+  <form class="searchBar" role="search">
+    <input type="text" autocomplete="false" placeholder="Search" id="searchField">
+  </form>
+
+  <ul id="itemList"></ul>
+
+<script src="smoothscroll-polyfill/smoothscroll.min.js"></script>
+<script src="fuse/fuse.min.js"></script>
+<script src="popper/umd/popper.min.js"></script>
+<script src="tooltip/umd/tooltip.min.js"></script>
 <script src="client.js"></script>
+
 </body>
 </html>
