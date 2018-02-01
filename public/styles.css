@@ -216,3 +216,34 @@ Tooltip styles
   padding: 15px;
   height: auto;
 }
+
+
+/** Old browser warning */
+body:before {
+  content: 'Your browser is not supported, please install the latest version of Chrome, Firefox, Edge or Safari.';
+  display: none;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: #0f0;
+  min-height: 30px;
+  line-height: 30px;
+  left: 0;
+  z-index: 10000;
+  text-align: center;
+  pointer-events: none;
+}
+
+/** Detect firefox older than quantum and browser without css grid support */
+@supports (not (animation: calc(0s))) or (not (display: grid)) {
+    body:before {
+      display: block;
+   }
+}
+
+/** Detect Internet Explorer */
+@media all and (-ms-high-contrast:none) {
+    body:before {
+      display: block;
+   }
+}
