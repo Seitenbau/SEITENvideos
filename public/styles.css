@@ -53,3 +53,29 @@ body {
 .breakWords {
     word-wrap: break-word;
 }
+
+
+/** Old browser warning */
+.old-browser-warning {
+  display: none;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: #0f0;
+  height: 100px;
+  left: 0;
+}
+
+/** Detect firefox older than quantum and browser without css grid support */
+@supports (not (animation: calc(0s))) or (not (display: grid)) {
+   .old-browser-warning {
+      display: block;
+   }
+}
+
+/** Detect Internet Explorer */
+@media all and (-ms-high-contrast:none) {
+   .old-browser-warning {
+      display: block;
+   }
+}
