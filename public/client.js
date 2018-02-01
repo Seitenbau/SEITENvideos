@@ -73,7 +73,7 @@
       .then(searchIndex => {
         // setup search
         const searchOptions = {
-          keys: ['title', 'description', 'tags', 'people'],
+          keys: ['title', 'description', 'tags', 'people', 'slug'],
           threshold: 0.2,
           tokenize: true,
           id: 'slug'
@@ -87,18 +87,14 @@
         // on search input trigger search
         input.addEventListener('input', event => {
           const searchResults = fuse.search(input.value);
-          const videoList = document.getElementsByClassName('video');
+          const videoParents = document.getElementsByClassName('videoparent');
 
           // show/hide everything
-          for (const videoEl of videoList) {
-            videoEl.style.display = input.value ? 'none' : '';
-            // hide all parents as well and show again later
-            //  // TODO: fix lower levels
-            videoEl.closest('.videoparent').style.display = input.value
-              ? 'none'
-              : '';
+          for (const videoParent of videoParents) {
+            videoParent.style.display = input.value ? 'none' : '';
           }
 
+          // show searchresults and all parents of them
           searchResults.map(id => {
             const videoItem = document.getElementById(id);
             if (videoItem) {
