@@ -6,8 +6,11 @@ import Octicon from '../../components/octicon';
 import { route } from 'preact-router';
 import TagsEditable from '../tagsEditable';
 import InlineEditor from '../inlineEditor';
+import { connect } from 'react-redux';
+import { saveData } from './actions';
+import crawl from 'tree-crawl';
 
-export default class MetaEditable extends Component {
+export class MetaEditable extends Component {
   constructor(props, context) {
     super(props, context);
 
@@ -22,36 +25,30 @@ export default class MetaEditable extends Component {
     meta: PropTypes.object,
     data: PropTypes.object,
     src: PropTypes.string,
-    onSave: PropTypes.func
+    onSave: PropTypes.func,
+    handleSave: PropTypes.func
   };
 
-  getListOfArrayKey(key, item) {
-    if (Array.isArray(item)) {
-      return this.uniqueArray(
-        this.mergeArray(
-          item.map(singleItem => this.getListOfArrayKey(key, singleItem))
-        )
-      );
-    }
+  getListOfArrayKey(tree, key) {
+    let result = [];
 
-    let itemsResult = [];
-    if (item.items && item.items.length > 0) {
-      itemsResult = this.mergeArray(
-        item.items.map(singleItem => this.getListOfArrayKey(key, singleItem))
-      );
-    }
+    crawl(
+      tree,
+      node => {
+        if (node.meta && node.meta[key]) {
+          // check if it's a comma separated string instead of an array, and split it up
+          const arr =
+            node.meta[key][0] && node.meta[key][0].indexOf(',') > -1
+              ? node.meta[key][0].split(',')
+              : node.meta[key];
 
-    if (item.meta && item.meta[key]) {
-      // check if it's a comma separated string instead of an array, and split it up
-      const arr =
-        item.meta[key][0] && item.meta[key][0].indexOf(',') > -1
-          ? item.meta[key][0].split(',')
-          : item.meta[key];
+          result = this.mergeArray([result, arr]);
+        }
+      },
+      { getChildren: node => node.items }
+    );
 
-      itemsResult = this.mergeArray([itemsResult, arr]);
-    }
-
-    return itemsResult;
+    return this.uniqueArray(result);
   }
 
   mergeArray(arr) {
@@ -66,8 +63,8 @@ export default class MetaEditable extends Component {
   componentWillMount() {
     // TODO call this on componentWillReceiveProps?
     // TODO combine these two iterations, so both keys will be returned without iterating twice
-    const peopleSuggestions = this.getListOfArrayKey('people', this.props.data);
-    const tagsSuggestions = this.getListOfArrayKey('tags', this.props.data);
+    const peopleSuggestions = this.getListOfArrayKey(this.props.data, 'people');
+    const tagsSuggestions = this.getListOfArrayKey(this.props.data, 'tags');
     this.setState({ peopleSuggestions, tagsSuggestions });
   }
 
@@ -104,44 +101,46 @@ export default class MetaEditable extends Component {
   };
 
   handleSubmit = event => {
-    event.preventDefault();
+    if (event) {
+      event.preventDefault();
+    }
 
-    const newMeta = this.state.meta;
-
-    console.log('edit', newMeta);
-    this.props.onSave(newMeta);
-
-    // async save to server and get new data
-    fetch(this.props.src.replace('video.mp4', 'meta.json'), {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      method: "POST",
-      body: JSON.stringify(newMeta)
-    }).then(response => {
-      if (!response.ok) {
-        throw Error(response.statusText);
-      }
-      return response.json();
-    }).then(json => {
-      // TODO replace client state with new server data
-      console.log('meta saved, received new data', json);
-    }).catch(e => console.log(e));
+    this.props.handleSave(this.state.meta, this.props.src);
 
     // end edit mode
     route(`/${this.props.meta.id}/${this.props.meta.slug}`);
   };
 
   handleCancel = event => {
-    event.preventDefault();
+    if (event) {
+      event.preventDefault();
+    }
     route('.');
+  };
+
+  handleKeyDown = event => {
+    // ctrl-enter or cmd-enter (MacOS) submit
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      (event.keyCode === 13 || event.keyCode === 10)
+    ) {
+      this.handleSubmit();
+    }
+
+    // cancel on escape
+    if (event.keyCode === 27) {
+      this.handleCancel();
+    }
   };
 
   render(props, state) {
     return (
       <div className={metaStyle.meta}>
-        <form onSubmit={this.handleSubmit} className={style.form}>
+        <form
+          onSubmit={this.handleSubmit}
+          className={style.form}
+          onKeyDown={this.handleKeyDown}
+        >
           <h1>
             <InlineEditor
               value={state.meta.title}
@@ -188,3 +187,17 @@ export default class MetaEditable extends Component {
     );
   }
 }
+
+const mapStateToProps = state => {
+  return {
+    data: state.home.data
+  };
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    handleSave: (data, src) => dispatch(saveData(data, src))
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(MetaEditable);

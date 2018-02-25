@@ -9,12 +9,23 @@
   margin-bottom: $marginSmall;
 }
 
-@media (min-aspect-ratio: 4/3) {
+@media (min-aspect-ratio: 1/1) {
   .wrapper {
     display: flex;
     flex-basis: 100%;
     text-align: left;
   }
+  .videoPlayer {
+    flex-basis: 66.666%;
+  }
+
+  .activeMetaContainer {
+    flex-basis: 31.3333%;
+    margin-left: 2%;
+  }
+}
+
+@media (min-aspect-ratio: 4/3) {
   .videoPlayer {
     flex-basis: 75%;
   }

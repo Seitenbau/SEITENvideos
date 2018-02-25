@@ -4,7 +4,8 @@ After=mountall.service
 
 [Service]
 User=www-data
-ExecStart=/bin/bash -ce "/usr/bin/node /usr/lib/sbideo/transcode.js /media/recordings/sbideo-incoming /media/recordings/sbideo-data >> /var/log/sbideo/transcode.log 2>&1"
+Environment="NODE_ENV=production"
+ExecStart=/bin/bash -ce "/usr/bin/node /usr/lib/sbideo/src/transcode.js /media/recordings/sbideo-incoming /media/recordings/sbideo-data >> /var/log/sbideo/transcode.log 2>&1"
 
 [Install]
 WantedBy=multi-user.target

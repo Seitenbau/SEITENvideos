@@ -55,16 +55,26 @@ task build( ) {
               )
     }
     
-    data(src: "$projectDir/public", type:"directory") {
+    data(src: "$projectDir/build", type:"directory") {
       mapper( type: "perm",
-              prefix: "/usr/lib/sbideo/public",
+              prefix: "/usr/lib/sbideo/build",
               user: 'www-data',
               group: 'www-data',
               filemode: '644',
               dirmode : '755'
               )
     }
-    
+
+    data(src: "$projectDir/src", type:"directory") {
+      mapper( type: "perm",
+              prefix: "/usr/lib/sbideo/src",
+              user: 'www-data',
+              group: 'www-data',
+              filemode: '644',
+              dirmode : '755'
+              )
+    }
+
   }
 
 }

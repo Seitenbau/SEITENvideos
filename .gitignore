@@ -1,5 +1,5 @@
 build
-items-testdata.json
+items-testdata*.json
 
 # Logs
 logs

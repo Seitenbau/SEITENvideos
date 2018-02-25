@@ -1,22 +1,27 @@
-import { h } from 'preact';
+import { h, Component } from 'preact';
 import PropTypes from 'prop-types';
-import style from './style.scss';
 
-const Octicon = ({ children, ...props }) => (
-  <span className={style.span} {...props}>
-    <img
-      src={`/octicons/build/svg/${props.name}.svg`}
-      alt={props.alt || props.name}
-      role="presentation"
-    />
-    {children}
-  </span>
-);
+export class Octicon extends Component {
+  state = {
+    icon: {}
+  };
+
+  componentDidMount() {
+    import(`octicons/build/svg/${this.props.name}.svg`).then(icon => {
+      this.setState({
+        icon: icon
+      });
+    });
+  }
+
+  render(props, state) {
+    // inline svg as react component
+    return <state.icon.ReactComponent {...props} />;
+  }
+}
 
 Octicon.propTypes = {
-  children: PropTypes.array,
-  name: PropTypes.string,
-  alt: PropTypes.string
+  name: PropTypes.string
 };
 
 export default Octicon;

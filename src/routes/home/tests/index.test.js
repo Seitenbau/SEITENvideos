@@ -1,28 +1,14 @@
 import { h } from 'preact';
-import Home from '../index.js';
+import { Home } from '../index.js';
 import { shallow } from 'preact-render-spy';
 jest.mock('../../../components/activeMetaContainer', () => <div />);
 
 describe('Test of the Homepage', () => {
-  beforeEach(function() {
-    global.fetch = jest.fn().mockImplementation(() => {
-      var p = new Promise(resolve => {
-        resolve({
-          ok: true,
-          Id: '123',
-          json: function() {
-            return { Id: '123' };
-          }
-        });
-      });
-      return p;
-    });
-  });
-
   test('Homepage renders the 3 main components', () => {
-    const context = shallow(<Home />);
-    expect(context.find('Search').length).toBe(1);
+    const context = shallow(
+      <Home data={{ items: [] }} retrieveData={() => {}} />
+    );
     expect(context.find('Folder').length).toBe(1);
-    expect(context.find('VideoContainer').length).toBe(1);
+    expect(context.find('Connect').length).toBe(2); // VideoContainer, Search
   });
 });

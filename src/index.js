@@ -1,5 +1,5 @@
 import './style/index.scss';
-import App from './components/app';
+import App from './app';
 
 if (typeof window !== 'undefined') {
   require('smoothscroll-polyfill').polyfill();

@@ -1,6 +1,9 @@
 - hosts: all
   name: Install and setup sbideo server and transcode 
   sudo: yes
+
+  environment:
+    NODE_ENV: production
   
   tasks:
   - name: create target directory
@@ -27,6 +30,16 @@
     shell: npm install
     args:
       chdir: /usr/lib/sbideo
+
+  - name: install preact-cli globally with npm
+    shell: npm install -g preact-cli
+        
+  - name: build sbideo with npm
+    shell: npm run build
+    args:
+      chdir: /usr/lib/sbideo
+    environment:
+      NODE_ENV: production
         
   - name: Add sbideo server systemd service configuration file
     copy: src=files/sbideo-server.service dest=/etc/systemd/system/sbideo-server.service owner=root group=root mode=0644

@@ -25,7 +25,7 @@ export default class Meta extends Component {
   }
 
   render(props) {
-    const { meta, showTitle } = props;
+    const { showTitle, meta } = props;
     return (
       <div className={style.meta}>
         {showTitle && <h1>{meta.title}</h1>}
