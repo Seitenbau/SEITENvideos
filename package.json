@@ -74,7 +74,7 @@
     "react": "^16.2.0",
     "react-autolink": "^0.2.1",
     "react-dom": "^16.2.0",
-    "react-popper": "^0.8.2",
+    "react-popper": "^0.9.1",
     "sass-loader": "^6.0.6",
     "smoothscroll-polyfill": "^0.4.0",
     "webpack": "^4.1.0"
